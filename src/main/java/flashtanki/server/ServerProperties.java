@@ -7,7 +7,7 @@ import flashtanki.server.client.ClientEntity;
 
 public class ServerProperties {
     public static String IP = "127.0.0.1";
-    public static int GAME_PORT = 7525;
+    public static int GAME_PORT = 2351;
     public static int RESOURCE_PORT = 8080;
     public static String DELIM_COMMANDS_SYMBOL = "~dne";
     public static String DELIM_ARGUMENTS_SYMBOL = ";";
