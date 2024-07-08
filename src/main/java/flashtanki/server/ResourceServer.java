@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import flashtanki.server.logger.Logger;
 import flashtanki.server.resource.ServerIdResource;
+import flashtanki.server.ResourceManager;
 import flashtanki.server.ServerProperties;
 
 import java.io.*;
@@ -14,6 +15,7 @@ import java.nio.file.Path;
 import java.util.concurrent.Executors;
 
 public class ResourceServer {
+
   private static final Logger LOGGER = new Logger();
   private static final ResourceManager resourceManager;
 
@@ -26,6 +28,14 @@ public class ResourceServer {
       System.exit(1); // Exit the application if ResourceManager initialization fails
     }
     resourceManager = manager;
+  }
+
+  public static void main(String[] args) {
+    try {
+      start();
+    } catch (IOException e) {
+      LOGGER.error("Error starting server: " + e.getMessage());
+    }
   }
 
   public static void start() throws IOException {
