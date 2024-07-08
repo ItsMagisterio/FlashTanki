@@ -53,6 +53,18 @@ public enum UserRank {
         this.bonusCrystals = bonusCrystals;
     }
 
+    public int getValue() {
+        return value;
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public int getBonusCrystals() {
+        return bonusCrystals;
+    }
+
     public static UserRank get(int value) {
         return map.get(value);
     }
@@ -63,13 +75,5 @@ public enum UserRank {
 
     public int getScoreOrZero() {
         return this.score;
-    }
-
-    public int getValue() {
-        return value;
-    }
-
-    public int getBonusCrystals() {
-        return bonusCrystals;
     }
 }
