@@ -25,7 +25,7 @@ public class ResourceServer {
       manager = new ResourceManager();
     } catch (ResourceManager.ResourceManagerException e) {
       LOGGER.error("Error initializing ResourceManager: " + e.getMessage());
-      System.exit(1); // Exit the application if ResourceManager initialization fails
+      System.exit(1);
     }
     resourceManager = manager;
   }
