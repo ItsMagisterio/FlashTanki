@@ -5,23 +5,30 @@ import flashtanki.server.resource.ServerIdResource;
 import flashtanki.server.utils.ResourceUtils;
 import java.io.*;
 import java.net.*;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.net.http.*;
 import java.nio.file.*;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
+import com.sun.net.httpserver.HttpHandler;
+import java.io.*;
+import java.net.*;
+import java.net.http.*;
+import java.nio.file.*;
+import java.util.concurrent.*;
 import com.sun.net.httpserver.*;
+import flashtanki.server.logger.Logger;
+import flashtanki.server.resource.ServerIdResource;
+import flashtanki.server.utils.ResourceUtils;
 
 public class ResourceServer {
-  private static final String STATIC_ROOT = "src/main/resources/data/static"; // Корректный путь к статическим ресурсам
+  private static final String STATIC_ROOT = "src/main/resources/data/static";
   private static final String ORIGINAL_PACK_NAME = "original";
-  private static final HttpClient CLIENT = HttpClient.newBuilder().build();
-  private static final Logger LOGGER = new Logger(); // Assuming a Logger class exists
+  private static final HttpClient CLIENT = HttpClient.newHttpClient();
+  private static final Logger LOGGER = new Logger();
 
   public static void start() throws IOException {
     HttpServer server = HttpServer.create(new InetSocketAddress(ServerProperties.IP, ServerProperties.RESOURCE_PORT), 0);
     server.createContext("/", new RequestHandler());
-    server.setExecutor(Executors.newFixedThreadPool(10)); // creates a thread pool with 10 threads
+    server.setExecutor(Executors.newFixedThreadPool(10));
     server.start();
     LOGGER.log(Logger.INFO, "Server started on port " + ServerProperties.RESOURCE_PORT);
   }
@@ -30,9 +37,8 @@ public class ResourceServer {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
       String[] pathSegments = exchange.getRequestURI().getPath().split("/");
-      LOGGER.log(Logger.INFO, "Received request for path: " + exchange.getRequestURI().getPath());
 
-      if (pathSegments.length < 6) { // Проверяем, что у нас достаточно сегментов пути
+      if (pathSegments.length < 6) {
         sendNotFound(exchange, "Invalid URL format.");
         return;
       }
@@ -46,36 +52,29 @@ public class ResourceServer {
 
         LOGGER.log(Logger.INFO, String.format("Parsed request for resource: %d/%d/%s/%s/%s", id, version, subVersion, subId, file));
 
-        // Создаем ресурс используя два ID (id и version)
         ServerIdResource resourceId = new ServerIdResource(id, version);
 
-        Path resourcePath = Paths.get(STATIC_ROOT, ORIGINAL_PACK_NAME, Long.toString(resourceId.id), Long.toString(resourceId.version), subVersion, subId, file);
-        File resource = resourcePath.toFile();
-
-        LOGGER.log(Logger.INFO, "Looking for resource at: " + resourcePath.toString());
+        File resource = new File(STATIC_ROOT, String.format("%s/%s/%d/%d/%s/%s/%s", ORIGINAL_PACK_NAME, resourceId.id, resourceId.version, subVersion, subId, file));
+        LOGGER.log(Logger.INFO, "Looking for resource at: " + resource.toString());
 
         if (!resource.exists()) {
-          LOGGER.log(Logger.INFO, "Resource not found locally, attempting to download: " + resourcePath.toString());
-          InputStream stream = null;
-          try {
-            stream = downloadOriginal(resourceId, subVersion, subId, file);
-          } catch (IOException | InterruptedException e) {
-            LOGGER.log(Logger.ERROR, "Error downloading resource: " + e.getMessage());
-          }
+          LOGGER.log(Logger.INFO, "Resource not found locally, attempting to download: " + resource.toString());
+          InputStream stream = downloadOriginal(resourceId, subVersion, subId, file);
 
           if (stream == null) {
-            sendNotFound(exchange, String.format("Resource %s/%s/%s/%s not found", resourceId, subVersion, subId, file));
-            LOGGER.log(Logger.INFO, String.format("Resource %s/%s/%s/%s not found", resourceId, subVersion, subId, file));
+            sendNotFound(exchange, String.format("Resource %d/%d/%s/%s/%s not found", id, version, subVersion, subId, file));
+            LOGGER.log(Logger.INFO, String.format("Resource %d/%d/%s/%s/%s not found", id, version, subVersion, subId, file));
             return;
           }
 
-          if (!resource.getParentFile().exists()) {
-            resource.getParentFile().mkdirs();
+          if (!resource.getParentFile().exists() && !resource.getParentFile().mkdirs()) {
+            throw new IOException("Failed to create parent directories for: " + resource.toString());
           }
+
           try (OutputStream output = new FileOutputStream(resource)) {
             stream.transferTo(output);
           }
-          LOGGER.log(Logger.INFO, "Downloaded and saved resource to: " + resourcePath.toString());
+          LOGGER.log(Logger.INFO, "Downloaded and saved resource to: " + resource.toString());
         }
 
         String contentType = getContentType(resource);
@@ -84,8 +83,8 @@ public class ResourceServer {
         try (OutputStream os = exchange.getResponseBody(); InputStream is = new FileInputStream(resource)) {
           is.transferTo(os);
         }
-        LOGGER.log(Logger.INFO, String.format("Sent resource %s/%s/%s/%s", resourceId, subVersion, subId, file));
-      } catch (Exception e) {
+        LOGGER.log(Logger.INFO, String.format("Sent resource %d/%d/%s/%s/%s", id, version, subVersion, subId, file));
+      } catch (NumberFormatException | IOException | InterruptedException e) {
         LOGGER.log(Logger.ERROR, "Error processing request: " + e.getMessage());
         sendNotFound(exchange, "Invalid resource ID or path.");
       }
@@ -109,19 +108,19 @@ public class ResourceServer {
       HttpResponse<InputStream> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
 
       if (response.statusCode() == 200) {
-        LOGGER.log(Logger.INFO, String.format("Downloaded original resource: %s/%s/%s/%s", resourceId, subVersion, subId, file));
+        LOGGER.log(Logger.INFO, String.format("Downloaded original resource: %d/%d/%s/%s/%s", resourceId.id, resourceId.version, subVersion, subId, file));
         return response.body();
-      }
-      if (response.statusCode() == 404) {
-        LOGGER.log(Logger.INFO, String.format("Original resource not found: %s/%s/%s/%s", resourceId, subVersion, subId, file));
+      } else if (response.statusCode() == 404) {
+        LOGGER.log(Logger.INFO, String.format("Original resource not found: %d/%d/%s/%s/%s", resourceId.id, resourceId.version, subVersion, subId, file));
         return null;
+      } else {
+        throw new IOException(String.format("Failed to download resource %d/%d/%s/%s/%s. Status code: %d", resourceId.id, resourceId.version, subVersion, subId, file, response.statusCode()));
       }
-      throw new IOException(String.format("Failed to download resource %s/%s/%s/%s. Status code: %d", resourceId, subVersion, subId, file, response.statusCode()));
     }
 
     private String getContentType(File file) {
       String extension = getFileExtension(file.getName());
-      switch (extension) {
+      switch (extension.toLowerCase()) {
         case "jpg":
           return "image/jpeg";
         case "png":
@@ -138,7 +137,7 @@ public class ResourceServer {
     private String getFileExtension(String fileName) {
       int lastDotIndex = fileName.lastIndexOf('.');
       if (lastDotIndex > 0 && lastDotIndex < fileName.length() - 1) {
-        return fileName.substring(lastDotIndex + 1);
+        return fileName.substring(lastDotIndex + 1).toLowerCase();
       }
       return "";
     }
