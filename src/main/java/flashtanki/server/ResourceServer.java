@@ -4,10 +4,8 @@ import flashtanki.server.logger.Logger;
 import flashtanki.server.resource.Resource;
 import flashtanki.server.resource.ServerIdResource;
 import flashtanki.server.utils.ResourceUtils;
-
 import java.io.*;
 import java.net.*;
-<<<<<<< HEAD
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -15,7 +13,6 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.Executors;
 import com.sun.net.httpserver.*;
-=======
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +20,6 @@ import java.util.Map;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
->>>>>>> 21aca3a382c16cae4996f66166041401d6b8a8ed
 
 public class ResourceServer {
   private static final String STATIC_ROOT = "./static";
