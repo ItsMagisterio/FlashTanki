@@ -1,26 +1,31 @@
 package flashtanki.server;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
 import flashtanki.server.logger.Logger;
 import flashtanki.server.resource.ServerIdResource;
-import flashtanki.server.utils.ResourceUtils;
+import flashtanki.server.ServerProperties;
+
 import java.io.*;
-import java.net.*;
-import java.net.http.*;
-import java.util.concurrent.*;
-import com.sun.net.httpserver.*;
+import java.net.InetSocketAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.Executors;
 
 public class ResourceServer {
-  private static final String STATIC_ROOT = "src/main/resources/data/static";
-  private static final String ORIGINAL_PACK_NAME = "original";
-  private static final HttpClient CLIENT = HttpClient.newHttpClient();
   private static final Logger LOGGER = new Logger();
+  private static final ResourceManager resourceManager;
 
-  public static void main(String[] args) {
+  static {
+    ResourceManager manager = null;
     try {
-      start();
-    } catch (IOException e) {
-      LOGGER.error("Error starting server: " + e.getMessage());
+      manager = new ResourceManager();
+    } catch (ResourceManager.ResourceManagerException e) {
+      LOGGER.error("Error initializing ResourceManager: " + e.getMessage());
+      System.exit(1); // Exit the application if ResourceManager initialization fails
     }
+    resourceManager = manager;
   }
 
   public static void start() throws IOException {
@@ -52,37 +57,26 @@ public class ResourceServer {
 
         ServerIdResource resourceId = new ServerIdResource(id, version);
 
-        File resourceFile = new File(STATIC_ROOT, String.format("%s/%s/%d/%d/%s/%s/%s", ORIGINAL_PACK_NAME, resourceId.id, resourceId.version, subVersion, subId, file));
-        LOGGER.log(Logger.INFO, "Looking for resource at: " + resourceFile.toString());
+        Path resourcePath = resourceManager.getResource(String.format("%s/%d/%d/%s/%s/%s", resourceId.id, resourceId.version, subVersion, subId, file));
 
-        if (!resourceFile.exists()) {
-          LOGGER.log(Logger.INFO, "Resource not found locally, attempting to download: " + resourceFile.toString());
-          InputStream stream = downloadOriginal(resourceId, subVersion, subId, file);
+        LOGGER.log(Logger.INFO, "Looking for resource at: " + resourcePath.toString());
 
-          if (stream == null) {
-            sendNotFound(exchange, String.format("Resource %d/%d/%s/%s/%s not found", id, version, subVersion, subId, file));
-            LOGGER.log(Logger.INFO, String.format("Resource %d/%d/%s/%s/%s not found", id, version, subVersion, subId, file));
-            return;
-          }
-
-          if (!resourceFile.getParentFile().exists() && !resourceFile.getParentFile().mkdirs()) {
-            throw new IOException("Failed to create parent directories for: " + resourceFile.toString());
-          }
-
-          try (OutputStream output = new FileOutputStream(resourceFile)) {
-            stream.transferTo(output);
-          }
-          LOGGER.log(Logger.INFO, "Downloaded and saved resource to: " + resourceFile.toString());
+        if (!Files.exists(resourcePath)) {
+          sendNotFound(exchange, String.format("Resource %d/%d/%s/%s/%s not found", id, version, subVersion, subId, file));
+          LOGGER.log(Logger.INFO, String.format("Resource %d/%d/%s/%s/%s not found", id, version, subVersion, subId, file));
+          return;
         }
 
-        String contentType = getContentType(resourceFile);
+        LOGGER.log(Logger.INFO, "Found resource locally at: " + resourcePath.toString());
+
+        String contentType = getContentType(resourcePath.toFile());
         exchange.getResponseHeaders().set("Content-Type", contentType);
-        exchange.sendResponseHeaders(200, resourceFile.length());
-        try (OutputStream os = exchange.getResponseBody(); InputStream is = new FileInputStream(resourceFile)) {
+        exchange.sendResponseHeaders(200, Files.size(resourcePath));
+        try (OutputStream os = exchange.getResponseBody(); InputStream is = Files.newInputStream(resourcePath)) {
           is.transferTo(os);
         }
         LOGGER.log(Logger.INFO, String.format("Sent resource %d/%d/%s/%s/%s", id, version, subVersion, subId, file));
-      } catch (NumberFormatException | IOException | InterruptedException e) {
+      } catch (NumberFormatException | IOException e) {
         LOGGER.log(Logger.ERROR, "Error processing request: " + e.getMessage());
         sendNotFound(exchange, "Invalid resource ID or path.");
       }
@@ -97,23 +91,6 @@ public class ResourceServer {
 
     private String getNotFoundBody(String message) {
       return "<html><body><h1>404 Not Found</h1><p>" + message + "</p></body></html>";
-    }
-
-    private InputStream downloadOriginal(ServerIdResource resourceId, String subVersion, String subId, String file) throws IOException, InterruptedException {
-      String url = String.format("http://146.59.110.103/%s/%s/%s/%s", ResourceUtils.encodeId(resourceId), subVersion, subId, file);
-      LOGGER.log(Logger.INFO, "Downloading resource from URL: " + url);
-      HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).build();
-      HttpResponse<InputStream> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
-
-      if (response.statusCode() == 200) {
-        LOGGER.log(Logger.INFO, String.format("Downloaded original resource: %d/%d/%s/%s/%s", resourceId.id, resourceId.version, subVersion, subId, file));
-        return response.body();
-      } else if (response.statusCode() == 404) {
-        LOGGER.log(Logger.INFO, String.format("Original resource not found: %d/%d/%s/%s/%s", resourceId.id, resourceId.version, subVersion, subId, file));
-        return null;
-      } else {
-        throw new IOException(String.format("Failed to download resource %d/%d/%s/%s/%s. Status code: %d", resourceId.id, resourceId.version, subVersion, subId, file, response.statusCode()));
-      }
     }
 
     private String getContentType(File file) {

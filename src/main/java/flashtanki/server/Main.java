@@ -9,11 +9,15 @@ import flashtanki.server.utils.RankUtils;
 
 public class Main {
 
-	public static void main(String[] args) throws IOException {
-		RankUtils.init();
-		Repositories.init();
-		BattleProcessor.init();
-		ResourceServer.start();
-		GameServer.start();
+	public static void main(String[] args) {
+		try {
+			RankUtils.init();
+			Repositories.init();
+			BattleProcessor.init();
+			ResourceServer.start();
+			GameServer.start();
+		} catch (IOException e) {
+			Logger.error("Error during application startup: " + e.getMessage());
+		}
 	}
 }
