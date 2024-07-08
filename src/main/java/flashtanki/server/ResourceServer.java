@@ -1,7 +1,6 @@
 package flashtanki.server;
 
 import flashtanki.server.logger.Logger;
-import flashtanki.server.resource.Resource;
 import flashtanki.server.resource.ServerIdResource;
 import flashtanki.server.utils.ResourceUtils;
 import java.io.*;
@@ -13,16 +12,9 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.Executors;
 import com.sun.net.httpserver.*;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
 
 public class ResourceServer {
-  private static final String STATIC_ROOT = "./static";
+  private static final String STATIC_ROOT = "./static"; // Корректный путь к статическим ресурсам
   private static final String ORIGINAL_PACK_NAME = "original";
   private static final HttpClient CLIENT = HttpClient.newBuilder().build();
   private static final Logger LOGGER = new Logger(); // Assuming a Logger class exists
@@ -39,19 +31,21 @@ public class ResourceServer {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
       String[] pathSegments = exchange.getRequestURI().getPath().split("/");
-      if (pathSegments.length < 7) {
+      LOGGER.log(Logger.INFO, "Received request for path: " + exchange.getRequestURI().getPath());
+
+      if (pathSegments.length < 2) {
         sendNotFound(exchange, "Invalid URL format.");
         return;
       }
 
-      String id1 = pathSegments[1];
-      String id2 = pathSegments[2];
-      String id3 = pathSegments[3];
-      String id4 = pathSegments[4];
-      String version = pathSegments[5];
-      String file = pathSegments[6];
+      String id1 = pathSegments.length > 1 ? pathSegments[1] : "";
+      String id2 = pathSegments.length > 2 ? pathSegments[2] : "";
+      String id3 = pathSegments.length > 3 ? pathSegments[3] : "";
+      String id4 = pathSegments.length > 4 ? pathSegments[4] : "";
+      String version = pathSegments.length > 5 ? pathSegments[5] : "";
+      String file = pathSegments.length > 6 ? pathSegments[6] : "";
 
-      LOGGER.log(Logger.INFO, String.format("Received request for resource: %s/%s/%s/%s/%s", id1, id2, id3, id4, version, file));
+      LOGGER.log(Logger.INFO, String.format("Parsed request for resource: %s/%s/%s/%s/%s", id1, id2, id3, id4, version, file));
 
       ServerIdResource resourceId;
       try {
@@ -65,8 +59,10 @@ public class ResourceServer {
       Path resourcePath = Paths.get(STATIC_ROOT, ORIGINAL_PACK_NAME, Long.toString(resourceId.id), version, file);
       File resource = resourcePath.toFile();
 
+      LOGGER.log(Logger.INFO, "Looking for resource at: " + resourcePath.toString());
+
       if (!resource.exists()) {
-        LOGGER.log(Logger.INFO, "Resource not found locally, attempting to download: " + resourcePath);
+        LOGGER.log(Logger.INFO, "Resource not found locally, attempting to download: " + resourcePath.toString());
         InputStream stream = null;
         try {
           stream = downloadOriginal(resourceId, version, file);
@@ -86,6 +82,7 @@ public class ResourceServer {
         try (OutputStream output = new FileOutputStream(resource)) {
           stream.transferTo(output);
         }
+        LOGGER.log(Logger.INFO, "Downloaded and saved resource to: " + resourcePath.toString());
       }
 
       String contentType = getContentType(resource);
@@ -110,6 +107,7 @@ public class ResourceServer {
 
     private InputStream downloadOriginal(ServerIdResource resourceId, String version, String file) throws IOException, InterruptedException {
       String url = String.format("http://146.59.110.103/%s/%s/%s", ResourceUtils.encodeId(resourceId), version, file);
+      LOGGER.log(Logger.INFO, "Downloading resource from URL: " + url);
       HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).build();
       HttpResponse<InputStream> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
 
