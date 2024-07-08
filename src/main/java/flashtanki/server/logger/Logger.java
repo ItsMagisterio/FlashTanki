@@ -4,12 +4,18 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class Logger {
-	
-	public static String INFO = "INFO";
-	public static String ERROR = "ERROR";
-	public static String WARNING = "WARNING";
-	
+
+    public static final String INFO = "INFO";
+    public static final String ERROR = "ERROR";
+    public static final String WARNING = "WARNING";
+
     public static void log(String type, String log) {
-        System.out.println("[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]" + " " + "[" + new Throwable().getStackTrace()[1].getClassName() + "]" + " " + "[" + type + "]" + " " + log);
+        System.out.println("[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]" + " " +
+                "[" + new Throwable().getStackTrace()[1].getClassName() + "]" + " " +
+                "[" + type + "]" + " " + log);
+    }
+
+    public static void error(String log) {
+        log(ERROR, log);
     }
 }

@@ -6,24 +6,22 @@ import flashtanki.server.utils.ResourceUtils;
 import java.io.*;
 import java.net.*;
 import java.net.http.*;
-import java.nio.file.*;
-import java.util.concurrent.*;
-import com.sun.net.httpserver.HttpHandler;
-import java.io.*;
-import java.net.*;
-import java.net.http.*;
-import java.nio.file.*;
 import java.util.concurrent.*;
 import com.sun.net.httpserver.*;
-import flashtanki.server.logger.Logger;
-import flashtanki.server.resource.ServerIdResource;
-import flashtanki.server.utils.ResourceUtils;
 
 public class ResourceServer {
   private static final String STATIC_ROOT = "src/main/resources/data/static";
   private static final String ORIGINAL_PACK_NAME = "original";
   private static final HttpClient CLIENT = HttpClient.newHttpClient();
   private static final Logger LOGGER = new Logger();
+
+  public static void main(String[] args) {
+    try {
+      start();
+    } catch (IOException e) {
+      LOGGER.error("Error starting server: " + e.getMessage());
+    }
+  }
 
   public static void start() throws IOException {
     HttpServer server = HttpServer.create(new InetSocketAddress(ServerProperties.IP, ServerProperties.RESOURCE_PORT), 0);
@@ -54,11 +52,11 @@ public class ResourceServer {
 
         ServerIdResource resourceId = new ServerIdResource(id, version);
 
-        File resource = new File(STATIC_ROOT, String.format("%s/%s/%d/%d/%s/%s/%s", ORIGINAL_PACK_NAME, resourceId.id, resourceId.version, subVersion, subId, file));
-        LOGGER.log(Logger.INFO, "Looking for resource at: " + resource.toString());
+        File resourceFile = new File(STATIC_ROOT, String.format("%s/%s/%d/%d/%s/%s/%s", ORIGINAL_PACK_NAME, resourceId.id, resourceId.version, subVersion, subId, file));
+        LOGGER.log(Logger.INFO, "Looking for resource at: " + resourceFile.toString());
 
-        if (!resource.exists()) {
-          LOGGER.log(Logger.INFO, "Resource not found locally, attempting to download: " + resource.toString());
+        if (!resourceFile.exists()) {
+          LOGGER.log(Logger.INFO, "Resource not found locally, attempting to download: " + resourceFile.toString());
           InputStream stream = downloadOriginal(resourceId, subVersion, subId, file);
 
           if (stream == null) {
@@ -67,20 +65,20 @@ public class ResourceServer {
             return;
           }
 
-          if (!resource.getParentFile().exists() && !resource.getParentFile().mkdirs()) {
-            throw new IOException("Failed to create parent directories for: " + resource.toString());
+          if (!resourceFile.getParentFile().exists() && !resourceFile.getParentFile().mkdirs()) {
+            throw new IOException("Failed to create parent directories for: " + resourceFile.toString());
           }
 
-          try (OutputStream output = new FileOutputStream(resource)) {
+          try (OutputStream output = new FileOutputStream(resourceFile)) {
             stream.transferTo(output);
           }
-          LOGGER.log(Logger.INFO, "Downloaded and saved resource to: " + resource.toString());
+          LOGGER.log(Logger.INFO, "Downloaded and saved resource to: " + resourceFile.toString());
         }
 
-        String contentType = getContentType(resource);
+        String contentType = getContentType(resourceFile);
         exchange.getResponseHeaders().set("Content-Type", contentType);
-        exchange.sendResponseHeaders(200, resource.length());
-        try (OutputStream os = exchange.getResponseBody(); InputStream is = new FileInputStream(resource)) {
+        exchange.sendResponseHeaders(200, resourceFile.length());
+        try (OutputStream os = exchange.getResponseBody(); InputStream is = new FileInputStream(resourceFile)) {
           is.transferTo(os);
         }
         LOGGER.log(Logger.INFO, String.format("Sent resource %d/%d/%s/%s/%s", id, version, subVersion, subId, file));
