@@ -70,8 +70,7 @@ public enum UserRank {
     }
 
     public UserRank getNextRank() {
-        return map.getOrDefault(this.value + 1, null);
-        //return UserRank.get(this.value + 1);
+        return UserRank.get(this.value + 1);
     }
 
     public int getScoreOrZero() {
