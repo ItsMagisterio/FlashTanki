@@ -4,7 +4,6 @@ import flashtanki.server.logger.Logger;
 import flashtanki.server.resource.Resource;
 import java.io.*;
 import java.net.*;
-import java.net.http.HttpClient;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;

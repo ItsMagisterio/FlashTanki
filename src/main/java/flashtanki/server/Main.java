@@ -11,7 +11,7 @@ public class Main {
 		RankUtils.init();
 		Repositories.init();
 		BattleProcessor.init();
-		//ResourceServer.start();
+		ResourceServer.start();
 		GameServer.start();
 	}
 }
