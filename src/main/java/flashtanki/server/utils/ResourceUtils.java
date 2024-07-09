@@ -8,16 +8,6 @@ import java.util.List;
 public class ResourceUtils {
     private ResourceUtils() {}
 
-    public static List<String> encodeId(ServerIdResource resource) {
-        return Arrays.asList(
-                Long.toString((resource.id & 0xff000000L) >> 24, 8),
-                Long.toString((resource.id & 0x00ff0000L) >> 16, 8),
-                Long.toString((resource.id & 0x0000ff00L) >> 8, 8),
-                Long.toString(resource.id & 0x000000ffL, 8),
-                Long.toString(resource.version, 8)
-        );
-    }
-
     public static ServerIdResource decodeId(List<String> parts) {
         return new ServerIdResource(
                 (Long.parseLong(parts.get(0), 8) << 24) |
@@ -30,18 +20,13 @@ public class ResourceUtils {
 
     public static String getContentType(String fileName) {
         String extension = getFileExtension(fileName);
-        switch (extension) {
-            case "jpg":
-                return "image/jpeg";
-            case "png":
-                return "image/png";
-            case "json":
-                return "application/json";
-            case "xml":
-                return "application/xml";
-            default:
-                return "application/octet-stream";
-        }
+        return switch (extension) {
+            case "jpg" -> "image/jpeg";
+            case "png" -> "image/png";
+            case "json" -> "application/json";
+            case "xml" -> "application/xml";
+            default -> "application/octet-stream";
+        };
     }
 
     private static String getFileExtension(String fileName) {
