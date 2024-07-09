@@ -55,16 +55,13 @@ public class ResourceServer {
         return;
       }
 
-      Path resourcePath = Resource.get(STATIC_ROOT + "/" + ORIGINAL_PACK_NAME + "/" + resourceId.id + "/" + version + "/" + file);
+      Path resourcePath = getResourcePath(resourceId, version, file);
       File resource = resourcePath.toFile();
 
       if (!resource.exists()) {
-          resourcePath = Resource.get(STATIC_ROOT + "/" + ORIGINAL_PACK_NAME + "/" + resourceId.id + "/" + String.valueOf(Integer.valueOf(version) - 4) + "/" + file);
-          resource = resourcePath.toFile();
-          if (!resource.exists()) {
-              resourcePath = Resource.get(STATIC_ROOT + "/" + ORIGINAL_PACK_NAME + "/" + resourceId.id + "/" + String.valueOf(Integer.valueOf(version) - 2) + "/" + file);
-              resource = resourcePath.toFile();
-          }
+        Logger.log(Logger.ERROR, "Resource not found.");
+        sendNotFound(exchange, "Resource not found.");
+        return;
       }
 
       String contentType = getContentType(resource);
@@ -74,6 +71,17 @@ public class ResourceServer {
         is.transferTo(os);
       }
       Logger.log(Logger.INFO, String.format("Sent resource %s:%s/%s", resourceId.id, version, file));
+    }
+
+    private Path getResourcePath(ServerIdResource resourceId, String version, String file) {
+      int[] versionOffsets = {0, -4, -2};
+      for (int offset : versionOffsets) {
+        Path path = Resource.get(String.format("%s/%s/%s/%d/%s", STATIC_ROOT, ORIGINAL_PACK_NAME, resourceId.id, Integer.parseInt(version) + offset, file));
+        if (path.toFile().exists()) {
+          return path;
+        }
+      }
+      return Paths.get("");
     }
 
     private void sendNotFound(HttpExchange exchange, String message) throws IOException {
@@ -104,24 +112,7 @@ public class ResourceServer {
     }
 
     private String getContentType(File file) {
-        String extension = getFileExtension(file.getName());
-        switch (extension) {
-          case "jpg":
-            return "image/jpeg";
-          case "png":
-            return "image/png";
-          case "json":
-            return "application/json";
-          case "xml":
-            return "application/xml";
-          default:
-            return "application/octet-stream";
-        }
-      }
-
-    private String getFileExtension(String fileName) {
-      int lastDotIndex = fileName.lastIndexOf('.');
-      return (lastDotIndex > 0 && lastDotIndex < fileName.length() - 1) ? fileName.substring(lastDotIndex + 1) : "";
+      return ResourceUtils.getContentType(file.getName());
     }
   }
 }
