@@ -14,8 +14,4 @@ public class Logger {
                 "[" + new Throwable().getStackTrace()[1].getClassName() + "]" + " " +
                 "[" + type + "]" + " " + log);
     }
-
-    public static void error(String log) {
-        log(ERROR, log);
-    }
 }

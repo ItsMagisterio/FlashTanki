@@ -17,7 +17,7 @@ public class Main {
 			ResourceServer.start();
 			GameServer.start();
 		} catch (IOException e) {
-			Logger.error("Error during application startup: " + e.getMessage());
+			Logger.log(Logger.ERROR, "Error during application startup: " + e.getMessage());
 		}
 	}
 }
