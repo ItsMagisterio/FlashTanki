@@ -107,7 +107,7 @@ public class ClientEntity implements Runnable {
 
 	public void initLobby() {
 		new Command(Commands.StartLayoutSwitch, "BATTLE_SELECT").send(this);
-		this.dependency.createAndLoadDependency(this, "lobby.json");
+		this.dependency.loadDependency(this, "lobby.json");
 		new Command(Commands.InitPremium, JSON.parseInitPremiumData(0, false, false, 86400, false, false)).send(this);
 		new Command(Commands.InitPanel, JSON.parseInitPanelData(this.user.username, this.user.crystals, null, false, this.user.getNextScore(), 0, RankUtils.getNumberRank(this.user.rank), 0, this.user.score, 0, false, 0, "")).send(this);
 		initBattleSelect();

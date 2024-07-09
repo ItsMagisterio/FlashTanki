@@ -26,7 +26,7 @@ public class Dependency {
 		return dependency;
 	}
 	
-    public void createAndLoadDependency(ClientEntity client, String file) {
+    public void loadDependency(ClientEntity client, String file) {
     	Path resource = Resource.get("resources/" + file);
     	this.id++;
     	try {

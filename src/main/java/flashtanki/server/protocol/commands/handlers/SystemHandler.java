@@ -17,8 +17,8 @@ public class SystemHandler implements CommandHandler {
 		{
 			new Command(Commands.InitRegistrationModel, JSON.parseInitRegistrationModelData()).send(client);
 			new Command(Commands.InitLocale, Localization.parse(args[0])).send(client);
-			client.dependency.createAndLoadDependency(client, "auth-untrusted.json");
-			client.dependency.createAndLoadDependency(client, "auth.json");
+			client.dependency.loadDependency(client, "auth-untrusted.json");
+			client.dependency.loadDependency(client, "auth.json");
 		};
 		if (command.startsWith(Commands.DependenciesLoaded.command))
 		{
