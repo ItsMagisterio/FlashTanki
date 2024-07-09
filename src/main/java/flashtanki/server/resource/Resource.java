@@ -9,21 +9,30 @@ public class Resource {
     private static Path resourceDirectory = null;
 
     public static Path get(String path) {
-        Path directory = Paths.get("data");
-        if (!Files.exists(directory)) {
-            directory = Paths.get("../data");
+        if (resourceDirectory == null) {
+            resourceDirectory = findResourceDirectory();
+            if (resourceDirectory == null) {
+                throw new IllegalStateException("Resource directory not found");
+            }
         }
-        if (!Files.exists(directory)) {
-            directory = Paths.get("src/main/resources/data");
-        }
-        if (!Files.exists(directory)) {
-            directory = Paths.get("../src/main/resources/data");
-        }
-        if (!Files.exists(directory)) {
-            System.out.println("НАЙН");
+        return resourceDirectory.resolve(path);
+    }
+
+    private static Path findResourceDirectory() {
+        Path[] possibleDirectories = {
+                Paths.get("data"),
+                Paths.get("../data"),
+                Paths.get("src/main/resources/data"),
+                Paths.get("../src/main/resources/data")
+        };
+
+        for (Path directory : possibleDirectories) {
+            if (Files.exists(directory)) {
+                return directory;
+            }
         }
 
-        resourceDirectory = directory;
-        return resourceDirectory.resolve(path);
+        System.err.println("Resource directory not found in any of the expected locations.");
+        return null;
     }
 }

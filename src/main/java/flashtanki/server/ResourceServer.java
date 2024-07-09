@@ -4,6 +4,7 @@ import flashtanki.server.logger.Logger;
 import flashtanki.server.resource.Resource;
 import flashtanki.server.resource.ServerIdResource;
 import flashtanki.server.utils.ResourceUtils;
+
 import java.io.*;
 import java.net.*;
 import java.net.http.HttpClient;
@@ -49,35 +50,35 @@ public class ResourceServer {
       try {
         resourceId = ResourceUtils.decodeId(Arrays.asList(id1, id2, id3, id4, version));
       } catch (Exception e) {
-    	Logger.log(Logger.ERROR, "Failed to decode resource ID: " + e.getMessage());
+        Logger.log(Logger.ERROR, "Failed to decode resource ID: " + e.getMessage());
         sendNotFound(exchange, "Invalid resource ID.");
         return;
       }
 
-      Path resourcePath = Resource.get(STATIC_ROOT + "/" + ORIGINAL_PACK_NAME + "/" + Long.toString(resourceId.id) + "/" + version + "/" + file);
+      Path resourcePath = Resource.get(STATIC_ROOT + "/" + ORIGINAL_PACK_NAME + "/" + resourceId.id + "/" + version + "/" + file);
       File resource = resourcePath.toFile();
 
       if (!resource.exists()) {
-          Logger.log(Logger.INFO, "Resource not found locally, attempting to download: " + resourcePath);
-          InputStream stream = null;
-          try {
-            stream = downloadOriginal(resourceId, version, file);
-          } catch (IOException | InterruptedException e) {
-        	  Logger.log(Logger.ERROR, "Error downloading resource: " + e.getMessage());
-          }
+        Logger.log(Logger.INFO, "Resource not found locally, attempting to download: " + resourcePath);
+        InputStream stream = null;
+        try {
+          stream = downloadOriginal(resourceId, version, file);
+        } catch (IOException | InterruptedException e) {
+          Logger.log(Logger.ERROR, "Error downloading resource: " + e.getMessage());
+        }
 
-          if (stream == null) {
-            sendNotFound(exchange, String.format("Resource %s:%s/%s not found", resourceId, version, file));
-            Logger.log(Logger.INFO, String.format("Resource %s:%s/%s not found", resourceId, version, file));
-            return;
-          }
+        if (stream == null) {
+          sendNotFound(exchange, String.format("Resource %s:%s/%s not found", resourceId, version, file));
+          Logger.log(Logger.INFO, String.format("Resource %s:%s/%s not found", resourceId, version, file));
+          return;
+        }
 
-          if (!resource.getParentFile().exists()) {
-            resource.getParentFile().mkdirs();
-          }
-          try (OutputStream output = new FileOutputStream(resource)) {
-            stream.transferTo(output);
-          }
+        if (!resource.getParentFile().exists()) {
+          resource.getParentFile().mkdirs();
+        }
+        try (OutputStream output = new FileOutputStream(resource)) {
+          stream.transferTo(output);
+        }
       }
 
       String contentType = getContentType(resource);
@@ -99,45 +100,37 @@ public class ResourceServer {
     private String getNotFoundBody(String message) {
       return "<html><body><h1>404 Not Found</h1><p>" + message + "</p></body></html>";
     }
-    
-    private InputStream downloadOriginal(ServerIdResource resourceId, String version, String file) throws IOException, InterruptedException {
-        String url = String.format("http://95.164.47.62:8080/%s/%s/%s", ResourceUtils.encodeId(resourceId), version, file);
-        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).build();
-        HttpResponse<InputStream> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
 
-        if (response.statusCode() == 200) {
-          Logger.log(Logger.INFO, String.format("Downloaded original resource: %s/%s/%s", resourceId, version, file));
-          return response.body();
-        }
-        if (response.statusCode() == 404) {
-          Logger.log(Logger.INFO, String.format("Original resource not found: %s/%s/%s", resourceId, version, file));
-          return null;
-        }
-        throw new IOException(String.format("Failed to download resource %s:%s/%s. Status code: %d", resourceId, version, file, response.statusCode()));
+    private InputStream downloadOriginal(ServerIdResource resourceId, String version, String file) throws IOException, InterruptedException {
+      String url = String.format("http://95.164.47.62:8080/%s/%s/%s", ResourceUtils.encodeId(resourceId), version, file);
+      HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).build();
+      HttpResponse<InputStream> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
+
+      if (response.statusCode() == 200) {
+        Logger.log(Logger.INFO, String.format("Downloaded original resource: %s/%s/%s", resourceId, version, file));
+        return response.body();
       }
+      if (response.statusCode() == 404) {
+        Logger.log(Logger.INFO, String.format("Original resource not found: %s/%s/%s", resourceId, version, file));
+        return null;
+      }
+      throw new IOException(String.format("Failed to download resource %s:%s/%s. Status code: %d", resourceId, version, file, response.statusCode()));
+    }
 
     private String getContentType(File file) {
       String extension = getFileExtension(file.getName());
-      switch (extension) {
-        case "jpg":
-          return "image/jpeg";
-        case "png":
-          return "image/png";
-        case "json":
-          return "application/json";
-        case "xml":
-          return "application/xml";
-        default:
-          return "application/octet-stream";
-      }
+      return switch (extension) {
+        case "jpg" -> "image/jpeg";
+        case "png" -> "image/png";
+        case "json" -> "application/json";
+        case "xml" -> "application/xml";
+        default -> "application/octet-stream";
+      };
     }
 
     private String getFileExtension(String fileName) {
       int lastDotIndex = fileName.lastIndexOf('.');
-      if (lastDotIndex > 0 && lastDotIndex < fileName.length() - 1) {
-        return fileName.substring(lastDotIndex + 1);
-      }
-      return "";
+      return (lastDotIndex > 0 && lastDotIndex < fileName.length() - 1) ? fileName.substring(lastDotIndex + 1) : "";
     }
   }
 }
