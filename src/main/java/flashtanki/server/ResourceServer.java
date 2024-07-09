@@ -95,22 +95,6 @@ public class ResourceServer {
       return "<html><body><h1>404 Not Found</h1><p>" + message + "</p></body></html>";
     }
 
-    private InputStream downloadOriginal(ServerIdResource resourceId, String version, String file) throws IOException, InterruptedException {
-      String url = String.format("http://95.164.47.62:8080/%s/%s/%s", ResourceUtils.encodeId(resourceId), version, file);
-      HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).build();
-      HttpResponse<InputStream> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
-
-      if (response.statusCode() == 200) {
-        Logger.log(Logger.INFO, String.format("Downloaded original resource: %s/%s/%s", resourceId, version, file));
-        return response.body();
-      }
-      if (response.statusCode() == 404) {
-        Logger.log(Logger.INFO, String.format("Original resource not found: %s/%s/%s", resourceId, version, file));
-        return null;
-      }
-      throw new IOException(String.format("Failed to download resource %s:%s/%s. Status code: %d", resourceId, version, file, response.statusCode()));
-    }
-
     private String getContentType(File file) {
       return ResourceUtils.getContentType(file.getName());
     }
