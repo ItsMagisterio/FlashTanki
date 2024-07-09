@@ -44,7 +44,7 @@ public class ResourceServer {
       String version = pathSegments[6];
       String file = pathSegments[7];
 
-      Logger.log(Logger.INFO, String.format("Received request for resource: %s/%s/%s/%s/%s", id1, id2, id3, id4, version, file));
+      Logger.log(Logger.INFO, String.format("Received request for resource: %s/%s/%s/%s/%s/%s", id1, id2, id3, id4, version, file));
 
       ServerIdResource resourceId;
       try {
@@ -68,8 +68,8 @@ public class ResourceServer {
         }
 
         if (stream == null) {
-          sendNotFound(exchange, String.format("Resource %s:%s/%s not found", resourceId, version, file));
-          Logger.log(Logger.INFO, String.format("Resource %s:%s/%s not found", resourceId, version, file));
+          sendNotFound(exchange, String.format("Resource %s:%s/%s not found", resourceId.id, version, file));
+          Logger.log(Logger.INFO, String.format("Resource %s:%s/%s not found", resourceId.id, version, file));
           return;
         }
 
@@ -87,7 +87,7 @@ public class ResourceServer {
       try (OutputStream os = exchange.getResponseBody(); InputStream is = new FileInputStream(resource)) {
         is.transferTo(os);
       }
-      Logger.log(Logger.INFO, String.format("Sent resource %s:%s/%s", resourceId, version, file));
+      Logger.log(Logger.INFO, String.format("Sent resource %s:%s/%s", resourceId.id, version, file));
     }
 
     private void sendNotFound(HttpExchange exchange, String message) throws IOException {
