@@ -5,6 +5,8 @@ import java.util.List;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
+import flashtanki.server.battles.BattleController;
 import flashtanki.server.battles.BattleLimit;
 import flashtanki.server.battles.BattleMode;
 import flashtanki.server.battles.BattleModel;
@@ -123,6 +125,10 @@ public class JSON {
     
     public static String parseInitGuiModelData(BattleModel battle) {
     	JSONObject obj = new JSONObject();
+		List<JSONObject> users = new ArrayList<JSONObject>();
+		for (BattleController player : battle.users.values()) {
+			users.add(JSON.parseBattleUser(player));
+		}
     	obj.put("name", battle.name);
     	obj.put("fund", 1337);
     	obj.put("scoreLimit", battle.battleProperties.get(BattleProperty.ScoreLimit));
@@ -134,7 +140,7 @@ public class JSON {
     	obj.put("equipmentConstraintsMode", "NONE");
     	obj.put("score_blue", 0);
     	obj.put("score_red", 0);
-    	obj.put("users", new ArrayList());
+    	obj.put("users", users);
     	return obj.toJSONString();
     }
     
@@ -152,10 +158,29 @@ public class JSON {
     	return obj.toJSONString();
     }
     
-    public static String parseInitDMStatistics() {
+    public static String parseInitDMStatistics(List<JSONObject> stats) {
     	JSONObject obj = new JSONObject();
-    	obj.put("users", new ArrayList());
+    	obj.put("users", stats);
     	return obj.toJSONString();
+    }
+    
+    public static JSONObject parseUserStat(BattleController controller) {
+    	JSONObject obj = new JSONObject();
+    	obj.put("chatModeratorLevel", 4);
+    	obj.put("deaths", controller.stat.deaths);
+    	obj.put("kills", controller.stat.kills);
+    	obj.put("rank", RankUtils.getNumberRank(controller.client.user.rank));
+    	obj.put("score", controller.stat.score);
+    	obj.put("uid", controller.client.user.username);
+    	return obj;
+    }
+    
+    public static JSONObject parseBattleUser(BattleController controller) {
+    	JSONObject obj = new JSONObject();
+    	obj.put("rank", RankUtils.getNumberRank(controller.client.user.rank));
+    	obj.put("teamType", "NONE");
+    	obj.put("nickname", controller.client.user.username);
+    	return obj;
     }
     
     public static String parseInitPremiumData(int leftTime, boolean needShowNotificationCompletionPremium, boolean needShowWelcomeAlert, int reminderCompletionPremiumTime, boolean wasShowAlertForFirstPurchasePremium, boolean wasShowReminderCompletionPremium) {

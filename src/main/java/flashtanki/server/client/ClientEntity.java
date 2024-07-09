@@ -125,7 +125,7 @@ public class ClientEntity implements Runnable {
 		limits.add(new BattleLimit("CP", 999, 59940));
 		maps.add(new Map());
 		new Command(Commands.InitBattleCreate, JSON.parseInitBattleCreateData(limits, maps)).send(this);
-		new Command(Commands.InitBattleSelect, JSON.parseInitBattleSelectData(BattleProcessor.battles)).send(this);
+		new Command(Commands.InitBattleSelect, JSON.parseInitBattleSelectData(BattleProcessor.getBattles())).send(this);
 	}
 
 	public void addScore(int score) {

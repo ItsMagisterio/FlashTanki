@@ -4,7 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import flashtanki.server.logger.Logger;
+import flashtanki.server.utils.JSON;
 
 public class BattleProcessor {
 	public static List<BattleModel> battles;
@@ -32,5 +37,18 @@ public class BattleProcessor {
 			}
 		}
 		return null;
+	}
+	
+	public static List<JSONObject> getBattles() {
+		List<JSONObject> battless = new ArrayList<JSONObject>();
+		JSONParser parser = new JSONParser();
+		for (BattleModel bm : battles) {
+			try {
+				battless.add((JSONObject)parser.parse(JSON.parseBattleData(bm)));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return battless;
 	}
 }

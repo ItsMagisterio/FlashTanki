@@ -23,7 +23,7 @@ public class Command {
 		    sb.append(ServerProperties.DELIM_ARGUMENTS_SYMBOL);
 	      }
 	   } 
-	   //Logger.log(Logger.INFO, "Sended new packet! " + sb.toString());
+	   Logger.log(Logger.INFO, "Sended new packet! " + this.command);
 	   client.send(sb.toString());
    }
 }
