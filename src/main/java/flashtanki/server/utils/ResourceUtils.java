@@ -20,13 +20,18 @@ public class ResourceUtils {
 
     public static String getContentType(String fileName) {
         String extension = getFileExtension(fileName);
-        return switch (extension) {
-            case "jpg" -> "image/jpeg";
-            case "png" -> "image/png";
-            case "json" -> "application/json";
-            case "xml" -> "application/xml";
-            default -> "application/octet-stream";
-        };
+        switch (extension) {
+           case "jpg":
+               return "image/jpeg";
+           case "png":
+               return "image/png";
+           case "json":
+               return "application/json";
+           case "xml":
+               return "application/xml";
+           default:
+               return "application/octet-stream";
+        }
     }
 
     private static String getFileExtension(String fileName) {
