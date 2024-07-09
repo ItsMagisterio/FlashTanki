@@ -59,26 +59,8 @@ public class ResourceServer {
       File resource = resourcePath.toFile();
 
       if (!resource.exists()) {
-        Logger.log(Logger.INFO, "Resource not found locally, attempting to download: " + resourcePath);
-        InputStream stream = null;
-        try {
-          stream = downloadOriginal(resourceId, version, file);
-        } catch (IOException | InterruptedException e) {
-          Logger.log(Logger.ERROR, "Error downloading resource: " + e.getMessage());
-        }
-
-        if (stream == null) {
-          sendNotFound(exchange, String.format("Resource %s:%s/%s not found", resourceId.id, version, file));
-          Logger.log(Logger.INFO, String.format("Resource %s:%s/%s not found", resourceId.id, version, file));
-          return;
-        }
-
-        if (!resource.getParentFile().exists()) {
-          resource.getParentFile().mkdirs();
-        }
-        try (OutputStream output = new FileOutputStream(resource)) {
-          stream.transferTo(output);
-        }
+          resourcePath = Resource.get(STATIC_ROOT + "/" + ORIGINAL_PACK_NAME + "/" + (((Long)resourceId.id).intValue() - 4) + "/" + version + "/" + file);
+          resource = resourcePath.toFile();
       }
 
       String contentType = getContentType(resource);
