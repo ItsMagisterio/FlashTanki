@@ -16,21 +16,16 @@ public class SystemHandler implements CommandHandler {
 		if (command.startsWith(Commands.GetAesData.command)) {
 			new Command(Commands.InitRegistrationModel, JSON.parseInitRegistrationModelData()).send(client);
 			new Command(Commands.InitLocale, Localization.parse(args[0])).send(client);
-			client.dependency.loadDependency(client, "auth-untrusted.json");
-			client.dependency.loadDependency(client, "auth.json", () -> {
-				new Command(Commands.InitInviteModel, ServerProperties.INVITES_ENABLED).send(client);
-				new Command(Commands.MainResourcesLoaded).send(client);
+			client.dependencyUtils.loadDependency(client, "auth-untrusted.json", () -> {
+				client.dependencyUtils.loadDependency(client, "auth.json", () -> {
+					new Command(Commands.InitInviteModel, ServerProperties.INVITES_ENABLED).send(client);
+					new Command(Commands.MainResourcesLoaded).send(client);
+				});
 			});
 		}
 
 		if (command.startsWith(Commands.DependenciesLoaded.command)) {
-			client.dependency.markDependency(Integer.valueOf(args[0]));
-			switch (args[0]) {
-				case "2":
-					new Command(Commands.InitInviteModel, ServerProperties.INVITES_ENABLED).send(client);
-					new Command(Commands.MainResourcesLoaded).send(client);
-					break;
-			}
+			client.dependencyUtils.mark(Integer.valueOf(args[0]));
 		}
 	}
 }

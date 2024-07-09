@@ -17,6 +17,7 @@ import flashtanki.server.protocol.commands.handlers.BattleHandler;
 import flashtanki.server.protocol.commands.handlers.LobbyHandler;
 import flashtanki.server.protocol.commands.handlers.SystemHandler;
 import flashtanki.server.user.User;
+import flashtanki.server.utils.DependencyUtils;
 import flashtanki.server.utils.JSON;
 import flashtanki.server.utils.RankUtils;
 import flashtanki.server.battles.BattleController;
@@ -30,14 +31,14 @@ public class ClientEntity implements Runnable {
 	public User user;
 	public BattleModel selectedBattle;
 	public BattleController battleController;
-	public Dependency dependency;
+	public DependencyUtils dependencyUtils;
 	private volatile boolean running;
 
 	public ClientEntity(Socket socket) {
 		this.socket = socket;
 		this.user = null;
 		this.running = true;
-		this.dependency = Dependency.create();
+		this.dependencyUtils = DependencyUtils.getInstance();
 	}
 
 	public void send(String packet) {
@@ -107,11 +108,12 @@ public class ClientEntity implements Runnable {
 
 	public void initLobby() {
 		new Command(Commands.StartLayoutSwitch, "BATTLE_SELECT").send(this);
-		this.dependency.loadDependency(this, "lobby.json");
-		new Command(Commands.InitPremium, JSON.parseInitPremiumData(0, false, false, 86400, false, false)).send(this);
-		new Command(Commands.InitPanel, JSON.parseInitPanelData(this.user.username, this.user.crystals, null, false, this.user.getNextScore(), 0, RankUtils.getNumberRank(this.user.rank), 0, this.user.score, 0, false, 0, "")).send(this);
-		initBattleSelect();
-		new Command(Commands.EndLayoutSwitch, "BATTLE_SELECT", "BATTLE_SELECT").send(this);
+		this.dependencyUtils.loadDependency(this, "lobby.json", () -> {
+			new Command(Commands.InitPremium, JSON.parseInitPremiumData(0, false, false, 86400, false, false)).send(this);
+			new Command(Commands.InitPanel, JSON.parseInitPanelData(this.user.username, this.user.crystals, null, false, this.user.getNextScore(), 0, RankUtils.getNumberRank(this.user.rank), 0, this.user.score, 0, false, 0, "")).send(this);
+			initBattleSelect();
+			new Command(Commands.EndLayoutSwitch, "BATTLE_SELECT", "BATTLE_SELECT").send(this);
+		});
 	}
 
 	private void initBattleSelect() {

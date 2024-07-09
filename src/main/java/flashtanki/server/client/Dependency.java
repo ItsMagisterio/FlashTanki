@@ -9,11 +9,10 @@ import flashtanki.server.protocol.commands.Commands;
 import flashtanki.server.resource.Resource;
 
 public class Dependency {
-	private int id = 0;
 	private CompletableFuture<Void> deferred;
+	private Runnable runnable;
 
 	public Dependency(int id, CompletableFuture<Void> deferred) {
-		this.id = id;
 		this.deferred = deferred;
 	}
 
@@ -21,25 +20,22 @@ public class Dependency {
 		return new Dependency(0, new CompletableFuture<>());
 	}
 
-	public void loadDependency(ClientEntity client, String file) {
-		loadDependency(client, file, null);
-	}
-
-	public void loadDependency(ClientEntity client, String file, Runnable afterLoad) {
+	public void loadDependency(ClientEntity client, int id, String file, Runnable afterLoad) {
 		Path resource = Resource.get("resources/" + file);
-		this.id++;
 		try {
 			new Command(Commands.LoadResources, new String(Files.readAllBytes(resource)), id).send(client);
 			if (afterLoad != null) {
-				this.deferred.thenRun(afterLoad);
+				this.runnable = afterLoad;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void markDependency(int id) {
-		this.deferred.complete(null);
-		Logger.log(Logger.INFO, "Dependency " + id + " is loaded");
+	public void markDependency() {
+		if (this.runnable != null) {
+			this.deferred.thenRun(this.runnable);
+			this.deferred.complete(null);
+		}
 	}
 }
