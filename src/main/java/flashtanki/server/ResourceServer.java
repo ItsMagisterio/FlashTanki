@@ -118,15 +118,20 @@ public class ResourceServer {
     }
 
     private String getContentType(File file) {
-      String extension = getFileExtension(file.getName());
-      return switch (extension) {
-        case "jpg" -> "image/jpeg";
-        case "png" -> "image/png";
-        case "json" -> "application/json";
-        case "xml" -> "application/xml";
-        default -> "application/octet-stream";
-      };
-    }
+        String extension = getFileExtension(file.getName());
+        switch (extension) {
+          case "jpg":
+            return "image/jpeg";
+          case "png":
+            return "image/png";
+          case "json":
+            return "application/json";
+          case "xml":
+            return "application/xml";
+          default:
+            return "application/octet-stream";
+        }
+      }
 
     private String getFileExtension(String fileName) {
       int lastDotIndex = fileName.lastIndexOf('.');

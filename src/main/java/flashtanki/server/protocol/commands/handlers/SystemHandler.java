@@ -17,12 +17,12 @@ public class SystemHandler implements CommandHandler {
 		{
 			new Command(Commands.InitRegistrationModel, JSON.parseInitRegistrationModelData()).send(client);
 			new Command(Commands.InitLocale, Localization.parse(args[0])).send(client);
-			Dependency.createAndLoadDependency(client, "auth-untrusted.json");
-			Dependency.createAndLoadDependency(client, "auth.json");
+			client.dependency.createAndLoadDependency(client, "auth-untrusted.json");
+			client.dependency.createAndLoadDependency(client, "auth.json");
 		};
 		if (command.startsWith(Commands.DependenciesLoaded.command))
 		{
-			Dependency.markDependency(Integer.valueOf(args[0]));
+			client.dependency.markDependency(Integer.valueOf(args[0]));
 			switch (args[0])
 			{
 			    case "2":
