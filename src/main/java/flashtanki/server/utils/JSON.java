@@ -157,4 +157,15 @@ public class JSON {
     	obj.put("users", new ArrayList());
     	return obj.toJSONString();
     }
+    
+    public static String parseInitPremiumData(int leftTime, boolean needShowNotificationCompletionPremium, boolean needShowWelcomeAlert, int reminderCompletionPremiumTime, boolean wasShowAlertForFirstPurchasePremium, boolean wasShowReminderCompletionPremium) {
+    	JSONObject obj = new JSONObject();
+    	obj.put("left_time", leftTime);
+    	obj.put("needShowNotificationCompletionPremium", needShowNotificationCompletionPremium);
+    	obj.put("needShowWelcomeAlert", needShowWelcomeAlert);
+    	obj.put("reminderCompletionPremiumTime", reminderCompletionPremiumTime);
+    	obj.put("wasShowAlertForFirstPurchasePremium", wasShowAlertForFirstPurchasePremium);
+    	obj.put("wasShowReminderCompletionPremium", wasShowReminderCompletionPremium);
+    	return obj.toJSONString();
+    }
 }
