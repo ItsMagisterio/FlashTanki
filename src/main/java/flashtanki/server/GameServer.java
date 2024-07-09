@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.nio.channels.ServerSocketChannel;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import flashtanki.server.client.ClientEntity;
 import flashtanki.server.logger.Logger;
 
@@ -26,41 +27,54 @@ public class GameServer {
 			Logger.log(Logger.INFO, "Game server is ready");
 
 			while (true) {
-				try {
-					Socket socket = serverChannel.socket().accept();
-					socket.setKeepAlive(true);
-					Logger.log(Logger.INFO, "New connection!");
-
-					ClientEntity clientEntity = new ClientEntity(socket);
-					ServerProperties.clients.add(clientEntity);
-					clientThreadPool.execute(clientEntity);
-
-				} catch (IOException e) {
-					Logger.log(Logger.ERROR, "Error accepting new connection: " + e.getMessage());
-				}
+				acceptClient();
 			}
 		} catch (IOException e) {
 			Logger.log(Logger.ERROR, "Error starting server: " + e.getMessage());
 		} finally {
-			if (serverChannel != null && serverChannel.isOpen()) {
-				try {
-					serverChannel.close();
-				} catch (IOException e) {
-					Logger.log(Logger.ERROR, "Error closing server channel: " + e.getMessage());
-				}
+			closeServerChannel();
+		}
+	}
+
+	private static void acceptClient() {
+		try {
+			Socket socket = serverChannel.socket().accept();
+			socket.setKeepAlive(true);
+			Logger.log(Logger.INFO, "New connection!");
+
+			ClientEntity clientEntity = new ClientEntity(socket);
+			ServerProperties.clients.add(clientEntity);
+			clientThreadPool.execute(clientEntity);
+		} catch (IOException e) {
+			Logger.log(Logger.ERROR, "Error accepting new connection: " + e.getMessage());
+		}
+	}
+
+	private static void closeServerChannel() {
+		if (serverChannel != null && serverChannel.isOpen()) {
+			try {
+				serverChannel.close();
+				Logger.log(Logger.INFO, "Server channel closed");
+			} catch (IOException e) {
+				Logger.log(Logger.ERROR, "Error closing server channel: " + e.getMessage());
 			}
 		}
 	}
 
 	public static void shutdown() {
-		clientThreadPool.shutdown();
-		if (serverChannel != null && serverChannel.isOpen()) {
-			try {
-				serverChannel.close();
-				Logger.log(Logger.INFO, "Game server shut down");
-			} catch (IOException e) {
-				Logger.log(Logger.ERROR, "Error closing server channel: " + e.getMessage());
+		try {
+			clientThreadPool.shutdown();
+			if (!clientThreadPool.awaitTermination(30, TimeUnit.SECONDS)) {
+				clientThreadPool.shutdownNow();
+				if (!clientThreadPool.awaitTermination(30, TimeUnit.SECONDS)) {
+					Logger.log(Logger.ERROR, "Client thread pool did not terminate");
+				}
 			}
+		} catch (InterruptedException ie) {
+			clientThreadPool.shutdownNow();
+			Thread.currentThread().interrupt();
 		}
+		closeServerChannel();
+		Logger.log(Logger.INFO, "Game server shut down");
 	}
 }
