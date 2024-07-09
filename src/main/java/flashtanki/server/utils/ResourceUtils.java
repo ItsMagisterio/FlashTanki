@@ -2,7 +2,6 @@ package flashtanki.server.utils;
 
 import flashtanki.server.resource.ServerIdResource;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class ResourceUtils {
