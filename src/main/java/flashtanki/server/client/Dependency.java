@@ -31,14 +31,14 @@ public class Dependency {
     	this.id++;
     	try {
 			new Command(Commands.LoadResources, new String(Files.readAllBytes(resource)), id).send(client);
-			this.deferred.get();
+			//this.deferred.get();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
     }
     
     public void markDependency(int id) {
-    	this.deferred.complete(null);
+    	//this.deferred.complete(null);
     	Logger.log(Logger.INFO, "Dependency " + id + " is loaded");
     }
 }

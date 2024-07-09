@@ -3,21 +3,15 @@ package flashtanki.server.database;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import flashtanki.server.logger.Logger;
 
 public class HibernateUtils {
-    private static final Logger logger = LoggerFactory.getLogger(HibernateUtils.class);
     private static SessionFactory sessionFactory;
 
     public static void setupSessionFactory() {
         Configuration config = getConfiguration();
-
-        logger.info("Configured: {}@{}",
-                config.getProperty("hibernate.connection.username"),
-                config.getProperty("hibernate.connection.url")
-        );
-
+        Logger.log(Logger.INFO, "Configured: " + config.getProperty("hibernate.connection.username") + ":" + config.getProperty("hibernate.connection.url"));
         sessionFactory = config.buildSessionFactory();
     }
 
