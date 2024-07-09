@@ -7,9 +7,6 @@ import flashtanki.server.utils.ResourceUtils;
 
 import java.io.*;
 import java.net.*;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -18,7 +15,6 @@ import com.sun.net.httpserver.*;
 public class ResourceServer {
   private static final String STATIC_ROOT = "static";
   private static final String ORIGINAL_PACK_NAME = "original";
-  private static final HttpClient CLIENT = HttpClient.newBuilder().build();
 
   public static void start() throws IOException {
     HttpServer server = HttpServer.create(new InetSocketAddress(ServerProperties.IP, ServerProperties.RESOURCE_PORT), 0);
