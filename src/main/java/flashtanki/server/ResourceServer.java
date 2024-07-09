@@ -59,8 +59,12 @@ public class ResourceServer {
       File resource = resourcePath.toFile();
 
       if (!resource.exists()) {
-          resourcePath = Resource.get(STATIC_ROOT + "/" + ORIGINAL_PACK_NAME + "/" + (((Long)resourceId.id).intValue() - 4) + "/" + version + "/" + file);
+          resourcePath = Resource.get(STATIC_ROOT + "/" + ORIGINAL_PACK_NAME + "/" + resourceId.id + "/" + String.valueOf(Integer.valueOf(version) - 4) + "/" + file);
           resource = resourcePath.toFile();
+          if (!resource.exists()) {
+              resourcePath = Resource.get(STATIC_ROOT + "/" + ORIGINAL_PACK_NAME + "/" + resourceId.id + "/" + String.valueOf(Integer.valueOf(version) - 2) + "/" + file);
+              resource = resourcePath.toFile();
+          }
       }
 
       String contentType = getContentType(resource);
