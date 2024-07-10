@@ -8,6 +8,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import org.json.simple.JSONObject;
 import flashtanki.server.battles.statistics.UserStatistics;
+import flashtanki.server.battles.tank.Tank;
 import flashtanki.server.client.ClientEntity;
 import flashtanki.server.protocol.commands.Command;
 import flashtanki.server.protocol.commands.Commands;
@@ -21,12 +22,14 @@ public class BattleController {
 	public ClientEntity client;
 	public boolean userInited = false;
 	public UserStatistics stat;
+	public Tank tank;
 	
 	public BattleController(ClientEntity entity, BattleModel battle) {
 		this.battleModel = battle;
 		this.client = entity;
 		this.battleModel.users.put(entity.user.username, this);
 		this.stat = new UserStatistics(0, 0, 0);
+		this.tank = new Tank(this);
 	}
 	
 	public void initBattle() {
@@ -35,7 +38,6 @@ public class BattleController {
         new Command(Commands.LoadResources, "{\"resources\":[{\"idhigh\":0,\"idlow\":336728,\"versionhigh\":0,\"versionlow\":2,\"type\":7,\"lazy\":false}]}").send(client);
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
-
 			@Override
 			public void run() {
 				try {
@@ -47,17 +49,8 @@ public class BattleController {
 				new Command(Commands.InitBonusesData, "{\"bonuses\":[{\"lighting\":{\"attenuationBegin\":100,\"attenuationEnd\":500,\"color\":6250335,\"intensity\":1,\"time\":0},\"id\":\"nitro\",\"resourceId\":170010,\"lifeTime\":30},{\"lighting\":{\"attenuationBegin\":100,\"attenuationEnd\":500,\"color\":9348154,\"intensity\":1,\"time\":0},\"id\":\"damage\",\"resourceId\":170011,\"lifeTime\":30},{\"lighting\":{\"attenuationBegin\":100,\"attenuationEnd\":500,\"color\":7185722,\"intensity\":1,\"time\":0},\"id\":\"armor\",\"resourceId\":170006,\"lifeTime\":30},{\"lighting\":{\"attenuationBegin\":100,\"attenuationEnd\":500,\"color\":14605789,\"intensity\":1,\"time\":0},\"id\":\"health\",\"resourceId\":170009,\"lifeTime\":30},{\"lighting\":{\"attenuationBegin\":100,\"attenuationEnd\":500,\"color\":15044128,\"intensity\":1,\"time\":0},\"id\":\"gold\",\"resourceId\":170008,\"lifeTime\":30},{\"lighting\":{\"attenuationBegin\":100,\"attenuationEnd\":500,\"color\":15044128,\"intensity\":1,\"time\":0},\"id\":\"container\",\"resourceId\":170007,\"lifeTime\":30}],\"cordResource\":1000065,\"parachuteInnerResource\":170005,\"parachuteResource\":170004,\"pickupSoundResource\":269321}").send(client);
 				new Command(Commands.InitBattleModel, JSON.parseInitBattleModelData(battleModel)).send(client);
 				new Command(Commands.InitBonuses, "[]").send(client);
-				initLocal();
-				Timer timer = new Timer();
-				timer.schedule(new TimerTask() {
-
-					@Override
-					public void run() {
-						createTank();	
-					}
-				}, 3000);	
 			}
-		}, 4000);
+		}, 10000);
 	}
 	
 	private void createTank() {
@@ -69,12 +62,16 @@ public class BattleController {
 		for (BattleController player : this.battleModel.users.values()) {
 			userStats.add(JSON.parseUserStat(player));
 		}
-		this.userInited = true;
 		if (this.battleModel.battleMode == BattleMode.Deathmatch)
 		{
 			new Command(Commands.InitDmModel).send(this.client);
 		};
 		new Command(Commands.InitGuiModel, JSON.parseInitGuiModelData(battleModel)).send(this.client);
 		new Command(Commands.InitDmStatistics, JSON.parseInitDMStatistics(userStats)).send(this.client);
+	}
+
+	public void start() {
+		this.userInited = true;
+		this.createTank();
 	}
 }

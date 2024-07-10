@@ -13,13 +13,13 @@ public class BattleHandler implements CommandHandler {
 		{
 			if (!client.battleController.userInited)
 			{
-				//client.battleController.init();
+				client.battleController.start();
 			}
 			//new Command(Commands.Pong).send(client);
 		};
 		if (command.startsWith(Commands.GetInitDataLocalTank.command))
 		{
-			
+			client.battleController.initLocal();
 		};
 	}
 }

@@ -41,10 +41,9 @@ public class BattleProcessor {
 	
 	public static List<JSONObject> getBattles() {
 		List<JSONObject> battless = new ArrayList<JSONObject>();
-		JSONParser parser = new JSONParser();
 		for (BattleModel bm : battles) {
 			try {
-				battless.add((JSONObject)parser.parse(JSON.parseBattleData(bm)));
+				battless.add(JSON.parse(JSON.parseBattleData(bm)));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

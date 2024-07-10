@@ -5,13 +5,13 @@ import java.util.List;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
 import flashtanki.server.battles.BattleController;
 import flashtanki.server.battles.BattleLimit;
 import flashtanki.server.battles.BattleMode;
 import flashtanki.server.battles.BattleModel;
 import flashtanki.server.battles.BattleProperty;
 import flashtanki.server.battles.Map;
+import flashtanki.server.battles.tank.Tank;
 
 public class JSON {
 	public static String parseInitRegistrationModelData() {
@@ -194,70 +194,61 @@ public class JSON {
 		return obj.toJSONString();
 	}
 
-	public static String parseInitTankData(
-			String battleId,
-			String hullId,
-			String turretId,
-			String colormapId,
-			String hullResource,
-			String turretResource,
-			String partsObject,
-			String tankId,
-			String nickname,
-			String teamType,
-			String state,
-			int health,
-			double maxSpeed,
-			double maxTurnSpeed,
-			double acceleration,
-			double reverseAcceleration,
-			double sideAcceleration,
-			double turnAcceleration,
-			double reverseTurnAcceleration,
-			double dampingCoeff,
-			double mass,
-			double power,
-			double turretTurnSpeed,
-			double turretTurnAcceleration,
-			double kickback,
-			double impactForce,
-			String sfxData
-	) {
-		JSONObject obj = new JSONObject();
-		obj.put("battleId", battleId);
-		obj.put("hull_id", hullId);
-		obj.put("turret_id", turretId);
-		obj.put("colormap_id", colormapId);
-		obj.put("hullResource", hullResource);
-		obj.put("turretResource", turretResource);
-		obj.put("partsObject", partsObject);
-		obj.put("tank_id", tankId);
-		obj.put("nickname", nickname);
-		obj.put("team_type", teamType);
-		obj.put("state", state);
-		obj.put("health", health);
-
-		// Hull physics
-		obj.put("maxSpeed", maxSpeed);
-		obj.put("maxTurnSpeed", maxTurnSpeed);
-		obj.put("acceleration", acceleration);
-		obj.put("reverseAcceleration", reverseAcceleration);
-		obj.put("sideAcceleration", sideAcceleration);
-		obj.put("turnAcceleration", turnAcceleration);
-		obj.put("reverseTurnAcceleration", reverseTurnAcceleration);
-		obj.put("dampingCoeff", dampingCoeff);
-		obj.put("mass", mass);
-		obj.put("power", power);
-
-		// Weapon physics
-		obj.put("turret_turn_speed", turretTurnSpeed);
-		obj.put("turretTurnAcceleration", turretTurnAcceleration);
-		obj.put("kickback", kickback);
-		obj.put("impact_force", impactForce);
-
-		// Weapon visual
-		obj.put("sfxData", sfxData);
-
-		return obj.toJSONString();
-	}
+	  public static String parseInitTankData(Tank tankData) {
+		    JSONObject obj = new JSONObject();
+		    obj.put("battleId", tankData.controller.battleModel.battleId);
+		    obj.put("hull_id", "wasp_m3");
+		    obj.put("turret_id", "thunder_m3");
+		    obj.put("colormap_id", 412123);
+		    obj.put("partsObject", "{\"engineIdleSound\":386284,\"engineStartMovingSound\":226985,\"engineMovingSound\":75329,\"turretSound\":242699}");
+		    obj.put("hullResource", 20647);
+		    obj.put("turretResource", 551825);
+		    obj.put("sfxData", "{\"$type\":\"thunder\",\"explosionMarkTexture\":262233,\"explosionSize\":1000,\"explosionSound\":373285,\"explosionTexture\":435325,\"shotSound\":337970,\"shotTexture\":215691,\"lighting\":[{\"name\":\"hit\",\"light\":[{\"attenuationBegin\":200,\"attenuationEnd\":800,\"color\":16741656,\"intensity\":0.8,\"time\":0},{\"attenuationBegin\":200,\"attenuationEnd\":800,\"color\":16741656,\"intensity\":0,\"time\":700}]},{\"name\":\"shot\",\"light\":[{\"attenuationBegin\":100,\"attenuationEnd\":500,\"color\":16741656,\"intensity\":0.9,\"time\":0},{\"attenuationBegin\":1,\"attenuationEnd\":2,\"color\":16741656,\"intensity\":0,\"time\":250}]},{\"name\":\"shellLightAnimation\",\"light\":[{\"attenuationBegin\":100,\"attenuationEnd\":350,\"color\":16741656,\"intensity\":0.5,\"time\":0}]}],\"bcsh\":[]}");
+		    obj.put("position", "0.0@0.0@0.0@0.0");
+		    obj.put("incration", tankData.controller.battleModel.incration);
+		    obj.put("tank_id", tankData.controller.client.user.username);
+		    obj.put("nickname", tankData.controller.client.user.username);
+		    obj.put("team_type", "NONE");
+		    obj.put("state", "suicide");
+		    obj.put("maxSpeed", 9999.0);
+		    obj.put("maxTurnSpeed", 9999.0);
+		    obj.put("acceleration", 9999.0);
+		    obj.put("reverseAcceleration", 9999.0);
+		    obj.put("sideAcceleration", 9999.0);
+		    obj.put("turnAcceleration", 9999.0);
+		    obj.put("reverseTurnAcceleration", 9999.0);
+		    obj.put("mass", 9999.0);
+		    obj.put("power", 9999.0);
+		    obj.put("dampingCoeff", 9999.0);
+		    obj.put("turret_turn_speed", 9999.0);
+		    obj.put("health", 10000);
+		    obj.put("rank", RankUtils.getNumberRank(tankData.controller.client.user.rank));
+		    obj.put("kickback", 9999.0);
+		    obj.put("turretTurnAcceleration", 9999.0);
+		    obj.put("impact_force", 9999.0);
+		    obj.put("state_null", true);
+		    return obj.toJSONString();
+		  }
+	  
+	  public static String parseSpawnTankData(Tank tank) {
+		  JSONObject obj = new JSONObject();
+		  obj.put("tank_id", tank.controller.client.user.username);
+		  obj.put("health", 10000);
+		  obj.put("speed", 100.0);
+		  obj.put("turn_speed", 10.6179938);
+		  obj.put("turret_rotation_speed", 2.179916235740918);
+		  obj.put("turretTurnAcceleration", 2.800031718974503);
+		  obj.put("acceleration", 13.0);
+		  obj.put("reverseAcceleration", 17.0);
+		  obj.put("sideAcceleration", 24.0);
+		  obj.put("turnAcceleration", 3.4906585);
+		  obj.put("reverseTurnAcceleration", 6.4577184);
+		  obj.put("incration_id", tank.controller.battleModel.incration);
+		  obj.put("team_type", "NONE");
+		  obj.put("x", -6000.121);
+		  obj.put("y", 2987.706);
+		  obj.put("z", 10000.0);
+		  obj.put("rot", 3.141592653589793);
+		  return obj.toJSONString();
+	  }
 }
