@@ -15,12 +15,14 @@ public class BattleModel {
 	public BattleMode battleMode;
 	public HashMap<String, BattleController> users = new HashMap<String, BattleController>();
 	public HashMap<String, Object> bonuses = new HashMap<String, Object>();
+	public FundManager fundManager;
 	
 	public BattleModel(String name, String battleid, BattleProperties battleproperties, BattleMode mode) {
 		this.name = name;
 		this.battleId = battleid;
 		this.battleProperties = battleproperties;
 		this.battleMode = mode;
+		this.fundManager = new FundManager(this);
 	}
 
 	public void createTank(BattleController battleController) {
@@ -33,9 +35,17 @@ public class BattleModel {
 	}
 
 	private void initOtherTanks(BattleController battleController) {
-		for (BattleController controller : users.values()) {
+		for (BattleController controller : this.users.values()) {
 			if (controller != battleController) {
 				new Command(Commands.InitTank, JSON.parseInitTankData(controller.tank)).send(battleController.client);
+			}
+		}
+	}
+
+	public void send2Battle(Command command) {
+		for (BattleController user : this.users.values()) {
+			if (user.userInited) {
+				command.send(user.client);
 			}
 		}
 	}

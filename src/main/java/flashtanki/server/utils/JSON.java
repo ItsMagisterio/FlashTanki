@@ -130,7 +130,7 @@ public class JSON {
 			users.add(JSON.parseBattleUser(player));
 		}
 		obj.put("name", battle.name);
-		obj.put("fund", 1337);
+		obj.put("fund", battle.fundManager.fund);
 		obj.put("scoreLimit", battle.battleProperties.get(BattleProperty.ScoreLimit));
 		obj.put("timeLimit", battle.battleProperties.get(BattleProperty.TimeLimit));
 		obj.put("currTime", 900);
@@ -251,4 +251,14 @@ public class JSON {
 		  obj.put("rot", 3.141592653589793);
 		  return obj.toJSONString();
 	  }
+
+	public static String parseBattleMessage(BattleController battleController, String message, boolean team) {
+		JSONObject obj = new JSONObject();
+		obj.put("system", false);
+		obj.put("team", team);
+		obj.put("message", message);
+		obj.put("nickname", battleController.client.user.username);
+		obj.put("team_type", "NONE");
+		return obj.toJSONString();
+	}
 }

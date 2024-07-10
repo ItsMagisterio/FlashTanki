@@ -79,7 +79,9 @@ public enum Commands {
 	InitInventory("battle", "init_inventory", "client"),
     SetItemCount("battle", "updateCount", "client"),
 	ActivateItem("battle", "activate_item", "server"),
-	ClientActivateItem("battle", "activate_item", "client");
+	ClientActivateItem("battle", "activate_item", "client"),
+	BattleChatServer("battle", "chat", "server"),
+	BattleChat("battle", "chat", "client");
 	
     public final String category;
 	public final String command;
