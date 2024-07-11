@@ -1,2 +1,1 @@
-FlashTanki Java Server                                                                                                                                                                                                  
-https://discord.gg/tjskEJ7SFb - FlashTanki server
+RTanks base on FlashTanki Java Server
