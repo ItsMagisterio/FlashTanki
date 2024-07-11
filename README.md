@@ -1,1 +1,1 @@
-RTanks base on FlashTanki Java Server
+RTanks based on FlashTanki Java Server
